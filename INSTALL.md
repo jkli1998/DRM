@@ -28,7 +28,7 @@ conda install h5py
 pip install ninja yacs cython matplotlib tqdm opencv-python overrides
 
 # follow PyTorch installation in https://pytorch.org/get-started/locally/
-# we give the instructions for CUDA 10.1
+# we give the instructions for CUDA 11.1
 pip install torch==1.9.1+cu111 torchvision==0.10.1+cu111 torchaudio==0.9.1 -f https://download.pytorch.org/whl/torch_stable.html
 
 export INSTALL_DIR=$PWD
