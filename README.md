@@ -124,7 +124,7 @@ CUDA_VISIBLE_DEVICES=0 python -m torch.distributed.launch --master_port 10001 --
     OUTPUT_DIR ./experiments/vg_predcls
 ```
 
-Knowledge Transfer Offline (Extract features and calculate distribution):
+Extract features for calculating distribution:
 ```bash
 CUDA_VISIBLE_DEVICES=0 python -m torch.distributed.launch --master_port 10002 --nproc_per_node=1 \
     tools/relation_infer_train.py \
@@ -147,7 +147,6 @@ CUDA_VISIBLE_DEVICES=0 python -m torch.distributed.launch --master_port 10002 --
 
 Stage2 (DRM):
 ```bash
-# TODO: move last_ckpt file.
 CUDA_VISIBLE_DEVICES=0 python -m torch.distributed.launch --master_port 10003 --nproc_per_node=1 \
     tools/relation_train_net.py \
     --config-file "configs/DRM_e2e_relation_X_101_32_8_FPN_1x.yaml" \
