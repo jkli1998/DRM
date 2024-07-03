@@ -3,25 +3,21 @@
 Most of the requirements of this projects are exactly the same as [Scene-Graph-Benchmark](https://github.com/KaihuaTang/Scene-Graph-Benchmark.pytorch) and [maskrcnn-benchmark](https://github.com/facebookresearch/maskrcnn-benchmark). If you have any problem of your environment, we recommend you to check their [issues page](https://github.com/facebookresearch/maskrcnn-benchmark/issues) first. Hope you will find the answer.
 
 ### Requirements:
-- Python >= 3.6 (Mine 3.6)
-- PyTorch >= 1.2 (Mine 1.6.0 (CUDA 10.1))
-- torchvision >= 0.4 (Mine 0.7.0 (CUDA 10.1))
+- Python == 3.7
+- PyTorch >= 1.7 (Mine 1.9.1 (CUDA 11.1))
 - cocoapi
 - yacs
 - matplotlib
-- GCC >= 4.9
 - OpenCV
 
 
 ### Step-by-step installation
 
 ```bash
-# first, make sure that your conda is setup properly with the right environment
-# for that, check that `which conda`, `which pip` and `which python` points to the
-# right path. From a clean conda env, this is what you need to do
+# NOTE: we assume the python version is 3.7.x, if you want use other versions, please change the 4th line of `DRM/maskrcnn_benchmark/utils/imports.py` to corresponding python version. 
 
-conda create --name SHA_GCL python=3.6
-source activate SHA_GCL
+conda create --name DRM python=3.7
+source activate DRM
 
 # this installs the right pip and dependencies for the fresh python
 conda install ipython
@@ -33,7 +29,7 @@ pip install ninja yacs cython matplotlib tqdm opencv-python overrides
 
 # follow PyTorch installation in https://pytorch.org/get-started/locally/
 # we give the instructions for CUDA 10.1
-pip install torch==1.6.0+cu101 torchvision==0.7.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
+pip install torch==1.9.1+cu111 torchvision==0.10.1+cu111 torchaudio==0.9.1 -f https://download.pytorch.org/whl/torch_stable.html
 
 export INSTALL_DIR=$PWD
 
@@ -47,12 +43,19 @@ python setup.py build_ext install
 cd $INSTALL_DIR
 git clone https://github.com/NVIDIA/apex.git
 cd apex
+git reset --hard 3fe10b5597ba14a748ebb271a6ab97c09c5701ac
+# IMPORTANT: here you need to change the 11-th line of apex/amp/_amp_state.py 
+# to `if TORCH_MAJOR == 0 or TORCH_MINOR > 8:`
 python setup.py install --cuda_ext --cpp_ext
+
+# install mmcv
+pip install -U openmim
+mim install mmcv==1.7.0
 
 # install PyTorch Detection
 cd $INSTALL_DIR
-git clone https://github.com/dongxingning/SHA-GCL-for-SGG.git
-cd SHA-GCL-for-SGG
+git clone https://github.com/jkli1998/DRM.git
+cd DRM
 
 # the following will install the lib with
 # symbolic links, so that you can modify

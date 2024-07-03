@@ -105,7 +105,7 @@ def main():
         dataset_names = None
         exit('wrong Dataset name!')
 
-    assert cfg.MODEL.ROI_RELATION_HEAD.RECONSTRUCT.INFER_TRAIN or cfg.DATASETS.INFER_BBOX
+    assert cfg.MODEL.INFER_TRAIN or cfg.DATASETS.INFER_BBOX
 
     output_folders = [None] * len(dataset_names)
 
@@ -116,25 +116,21 @@ def main():
             output_folders[idx] = output_folder
     data_loaders_val = [make_data_infer_loader(cfg, mode="train", is_distributed=distributed)]
     # data_loaders_val = make_data_loader(cfg, mode="test", is_distributed=distributed)
-    # if cfg.MODEL.ROI_RELATION_HEAD.RECONSTRUCT.INFER_TRAIN:
-    #     infer_epoch = 16
-    # else:
-    infer_epoch = 1
-    for _ in range(infer_epoch):
-        for output_folder, dataset_name, data_loader_val in zip(output_folders, dataset_names, data_loaders_val):
-            inference(
-                cfg,
-                model,
-                data_loader_val,
-                dataset_name=dataset_name,
-                iou_types=iou_types,
-                box_only=False if cfg.MODEL.RETINANET_ON else cfg.MODEL.RPN_ONLY,
-                device=cfg.MODEL.DEVICE,
-                expected_results=cfg.TEST.EXPECTED_RESULTS,
-                expected_results_sigma_tol=cfg.TEST.EXPECTED_RESULTS_SIGMA_TOL,
-                output_folder=output_folder,
-            )
-            synchronize()
+
+    for output_folder, dataset_name, data_loader_val in zip(output_folders, dataset_names, data_loaders_val):
+        inference(
+            cfg,
+            model,
+            data_loader_val,
+            dataset_name=dataset_name,
+            iou_types=iou_types,
+            box_only=False if cfg.MODEL.RETINANET_ON else cfg.MODEL.RPN_ONLY,
+            device=cfg.MODEL.DEVICE,
+            expected_results=cfg.TEST.EXPECTED_RESULTS,
+            expected_results_sigma_tol=cfg.TEST.EXPECTED_RESULTS_SIGMA_TOL,
+            output_folder=output_folder,
+        )
+        synchronize()
 
 
 if __name__ == "__main__":

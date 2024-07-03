@@ -34,7 +34,6 @@ from maskrcnn_benchmark.utils.logger import setup_logger, debug_print
 from maskrcnn_benchmark.utils.miscellaneous import mkdir, save_config
 from maskrcnn_benchmark.utils.metric_logger import MetricLogger
 
-from tensorboardX import SummaryWriter
 
 # See if we can use apex.DistributedDataParallel instead of the torch default,
 # and enable mixed-precision via apex.amp
@@ -67,18 +66,17 @@ def train(cfg, local_rank, distributed, logger):
     # NOTE, we slow down the LR of the layers start with the names in slow_heads
     if cfg.MODEL.ROI_RELATION_HEAD.PREDICTOR == "IMPPredictor":
         slow_heads = ["roi_heads.relation.box_feature_extractor",
-                      "roi_heads.relation.union_feature_extractor.feature_extractor", ]
+                      "roi_heads.relation.union_feature_extractor.feature_extractor",]
     else:
         slow_heads = []
 
     # load pretrain layers to new layers
-    load_mapping = {"roi_heads.relation.box_feature_extractor": "roi_heads.box.feature_extractor",
-                    "roi_heads.relation.union_feature_extractor.feature_extractor": "roi_heads.box.feature_extractor"}
+    load_mapping = {"roi_heads.relation.box_feature_extractor" : "roi_heads.box.feature_extractor",
+                    "roi_heads.relation.union_feature_extractor.feature_extractor" : "roi_heads.box.feature_extractor"}
 
     if cfg.MODEL.ATTRIBUTE_ON:
         load_mapping["roi_heads.relation.att_feature_extractor"] = "roi_heads.attribute.feature_extractor"
-        load_mapping[
-            "roi_heads.relation.union_feature_extractor.att_feature_extractor"] = "roi_heads.attribute.feature_extractor"
+        load_mapping["roi_heads.relation.union_feature_extractor.att_feature_extractor"] = "roi_heads.attribute.feature_extractor"
 
     device = torch.device(cfg.MODEL.DEVICE)
     model.to(device)
@@ -92,7 +90,7 @@ def train(cfg, local_rank, distributed, logger):
     # Initialize mixed-precision training
     use_mixed_precision = cfg.DTYPE == "float16"
     amp_opt_level = 'O1' if use_mixed_precision else 'O0'
-    model, optimizer = amp.initialize(model, optimizer, opt_level=amp_opt_level, min_loss_scale=1.0)
+    model, optimizer = amp.initialize(model, optimizer, opt_level=amp_opt_level)
 
     if distributed:
         model = torch.nn.parallel.DistributedDataParallel(
@@ -112,7 +110,7 @@ def train(cfg, local_rank, distributed, logger):
     logger.info("***********************Step 3: loading pre-trained model***********************")
     save_to_disk = get_rank() == 0
     checkpointer = DetectronCheckpointer(
-        cfg, model, optimizer, scheduler, output_dir, save_to_disk, custom_scheduler=cfg.SOLVER.DISCARD_SCHEDULE,
+        cfg, model, optimizer, scheduler, output_dir, save_to_disk, custom_scheduler=True,
     )
     # if there is certain checkpoint in output_dir, load it, else load pretrained detector
     if cfg.GLOBAL_SETTING.DATASET_CHOICE == 'VG':
@@ -123,8 +121,7 @@ def train(cfg, local_rank, distributed, logger):
         pretrain_object_detector_dir = cfg.MODEL.PRETRAINED_DETECTOR_CKPT_OIV6
     if checkpointer.has_checkpoint():
         extra_checkpoint_data = checkpointer.load(pretrain_object_detector_dir,
-                                                  update_schedule=cfg.SOLVER.UPDATE_SCHEDULE_DURING_LOAD,
-                                                  with_optim=cfg.SOLVER.LOAD_OPT)
+                                                  update_schedule=cfg.SOLVER.UPDATE_SCHEDULE_DURING_LOAD)
         arguments.update(extra_checkpoint_data)
     else:
         # load_mapping is only used when we init current model from detection model.
@@ -161,16 +158,9 @@ def train(cfg, local_rank, distributed, logger):
     start_training_time = time.time()
     end = time.time()
     print_first_grad = True
-    time_now = time.strftime("runs/%Y%m%d-%H%M", time.localtime())
-    gpu_idx = get_rank()
-    log_path = os.path.join(cfg.OUTPUT_DIR, time_now + "_{}".format(gpu_idx))
-    # writer = SummaryWriter(log_path) if cfg.TENSORBOARD else None
-    last_ckpt = None
     for iteration, (images, targets, _) in enumerate(train_data_loader, start_iter):
         if any(len(target) < 1 for target in targets):
-            logger.error(
-                f"Iteration={iteration + 1} || Image Ids used for training {_} || targets Length={[len(target) for target in targets]}")
-
+            logger.error(f"Iteration={iteration + 1} || Image Ids used for training {_} || targets Length={[len(target) for target in targets]}" )
         data_time = time.time() - end
         iteration = iteration + 1
         arguments["iteration"] = iteration
@@ -190,32 +180,8 @@ def train(cfg, local_rank, distributed, logger):
             losses = sum(loss for loss in loss_dict.values())
             # reduce losses over all GPUs for logging purposes
             loss_dict_reduced = reduce_loss_dict(loss_dict)
-            """
-            if trigger:
-                bi_labels = model.module.roi_heads.relation.predictor.debug_bi_labels
-                bi_rel = model.module.roi_heads.relation.predictor.debug_bi_rel
-                gpu_idx = torch.distributed.get_rank()
-
-                # bi_labels = model.roi_heads.relation.predictor.debug_bi_labels
-                # bi_rel = model.roi_heads.relation.predictor.debug_bi_rel
-                # gpu_idx = 0c
-
-                print("idx: {} shape: ---------".format(gpu_idx), bi_labels.shape, bi_rel.shape)
-                print("idx: {} bi_labels: -----".format(gpu_idx), bi_labels.detach().cpu().numpy().tolist()[:20])
-                print("idx: {} bi_rel: --------".format(gpu_idx), bi_rel.detach().cpu().numpy().tolist()[:20])
-                debug_losses = torch.nn.BCEWithLogitsLoss(reduction='none')(bi_rel.squeeze(-1), bi_labels.float())
-                max_l = torch.argmax(debug_losses)
-                print("idx: {}-----".format(gpu_idx), bi_rel.squeeze(-1)[max_l], bi_labels[max_l], debug_losses[max_l])
-                max_l = torch.argmax(-debug_losses)
-                print("idx: {}-----".format(gpu_idx), bi_rel.squeeze(-1)[max_l], bi_labels[max_l], debug_losses[max_l])
-                print("idx: {} debug_losses: --------".format(gpu_idx), debug_losses[:20])
-                trigger = False
-            """
             losses_reduced = sum(loss for loss in loss_dict_reduced.values())
             meters.update(loss=losses_reduced, **loss_dict_reduced)
-            # for k, v in loss_dict_reduced.items():
-            #     if writer is not None:
-            #         writer.add_scalar(os.path.join("loss", k), v.item(), iteration)
             optimizer.zero_grad()
             # Note: If mixed precision is not used, this ends up doing nothing
             # Otherwise apply loss scaling for mixed-precision recipe
@@ -229,6 +195,7 @@ def train(cfg, local_rank, distributed, logger):
             clip_grad_norm([(n, p) for n, p in model.named_parameters() if p.requires_grad],
                            max_norm=cfg.SOLVER.GRAD_NORM_CLIP, logger=logger, verbose=verbose, clip=True)
             optimizer.step()
+
         batch_time = time.time() - end
         end = time.time()
         meters.update(time=batch_time, data=data_time)
@@ -260,7 +227,7 @@ def train(cfg, local_rank, distributed, logger):
         if iteration == max_iter:
             checkpointer.save("model_final", **arguments)
 
-        val_result = None  # used for scheduler updating
+        val_result = None # used for scheduler updating
         if cfg.SOLVER.TO_VAL and iteration % cfg.SOLVER.VAL_PERIOD == 0:
             logger.info("Start validating")
             val_result = run_val(cfg, model, val_data_loaders, distributed, logger)
@@ -288,9 +255,6 @@ def train(cfg, local_rank, distributed, logger):
         )
     )
     logger.info("***********************Step training over***********************")
-    # if writer is not None:
-    #     writer.export_scalars_to_json(os.path.join(log_path, 'all_scalars.json'))
-    #     writer.close()
     name = "model_{:07d}".format(best_epoch)
     last_filename = os.path.join(cfg.OUTPUT_DIR, "{}.pth".format(name))
     output_folder = os.path.join(cfg.OUTPUT_DIR, "last_checkpoint")
@@ -301,13 +265,11 @@ def train(cfg, local_rank, distributed, logger):
 
     return model
 
-
 def fix_eval_modules(eval_modules):
     for module in eval_modules:
         for _, param in module.named_parameters():
             param.requires_grad = False
         # DO NOT use module.eval(), otherwise the module will be in the test mode, i.e., all self.training condition is set to False
-
 
 def run_val(cfg, model, val_data_loaders, distributed, logger):
     if distributed:
@@ -319,9 +281,9 @@ def run_val(cfg, model, val_data_loaders, distributed, logger):
     if cfg.MODEL.KEYPOINT_ON:
         iou_types = iou_types + ("keypoints",)
     if cfg.MODEL.RELATION_ON:
-        iou_types = iou_types + ("relations",)
+        iou_types = iou_types + ("relations", )
     if cfg.MODEL.ATTRIBUTE_ON:
-        iou_types = iou_types + ("attributes",)
+        iou_types = iou_types + ("attributes", )
 
     if cfg.GLOBAL_SETTING.DATASET_CHOICE == 'VG':
         dataset_names = cfg.DATASETS.VG_VAL
@@ -354,32 +316,31 @@ def run_val(cfg, model, val_data_loaders, distributed, logger):
     gathered_result = all_gather(torch.tensor(dataset_result).cpu())
     gathered_result = [t.view(-1) for t in gathered_result]
     gathered_result = torch.cat(gathered_result, dim=-1).view(-1)
-    valid_result = gathered_result[gathered_result >= 0]
+    valid_result = gathered_result[gathered_result>=0]
     val_result = float(valid_result.mean())
     del gathered_result, valid_result
-    # torch.cuda.empty_cache()
+    #torch.cuda.empty_cache()
     return val_result
-
 
 def run_test(cfg, model, distributed, logger, is_best=False):
     if is_best:
         logger.info("***********************Best testing starts***********************")
-        checkpointer = DetectronCheckpointer(cfg, model, save_dir=cfg.OUTPUT_DIR, custom_scheduler=False)
+        checkpointer = DetectronCheckpointer(cfg, model, save_dir=cfg.OUTPUT_DIR)
         _ = checkpointer.load(cfg.MODEL.WEIGHT)
     else:
         logger.info("***********************Step testing starts***********************")
     if distributed:
         model = model.module
-    # torch.cuda.empty_cache()
+    #torch.cuda.empty_cache()
     iou_types = ("bbox",)
     if cfg.MODEL.MASK_ON:
         iou_types = iou_types + ("segm",)
     if cfg.MODEL.KEYPOINT_ON:
         iou_types = iou_types + ("keypoints",)
     if cfg.MODEL.RELATION_ON:
-        iou_types = iou_types + ("relations",)
+        iou_types = iou_types + ("relations", )
     if cfg.MODEL.ATTRIBUTE_ON:
-        iou_types = iou_types + ("attributes",)
+        iou_types = iou_types + ("attributes", )
 
     if cfg.GLOBAL_SETTING.DATASET_CHOICE == 'VG':
         dataset_names = cfg.DATASETS.VG_TEST
@@ -421,20 +382,7 @@ def run_test(cfg, model, distributed, logger, is_best=False):
         print('\n\n')
 
 
-def seed_everything(seed):
-    torch.manual_seed(seed)  # Current CPU
-    torch.cuda.manual_seed(seed)  # Current GPU
-    np.random.seed(seed)  # Numpy module
-    random.seed(seed)  # Python random module
-    torch.backends.cudnn.benchmark = False  # Close optimization
-    torch.backends.cudnn.deterministic = True  # Close optimization
-    torch.cuda.manual_seed_all(seed)
-    # False True initial
-
-
 def main():
-    seed = 42
-    seed_everything(seed)
     parser = argparse.ArgumentParser(description="PyTorch Relation Detection Training")
     parser.add_argument(
         "--config-file",
@@ -472,7 +420,7 @@ def main():
     cfg.merge_from_file(args.config_file)
     cfg.merge_from_list(args.opts)
     cfg.freeze()
-    assert seed == cfg.SEED
+
     output_dir = cfg.OUTPUT_DIR
     if output_dir:
         mkdir(output_dir)
