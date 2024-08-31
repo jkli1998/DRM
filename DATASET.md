@@ -9,7 +9,8 @@ If you want to use other directory, please link it in `DATASETS` of `maskrcnn_be
 
 ### For GQA Dataset:
 1. Download the GQA images [Full (20.3 Gb)](https://downloads.cs.stanford.edu/nlp/data/gqa/images.zip). Extract these images to the file `datasets/gqa/images`. 
-2. In order to achieve a representative split like VG150, we use the protocol provided by [SHA-GCL](https://github.com/dongxingning/SHA-GCL-for-SGG). You can download the annotation file from [this link](https://1drv.ms/u/s!AjK8-t5JiDT1kwwKFbdBB3ZU3c49?e=06qeZc), and put all three files to  `datasets/gqa/`. 
+2. In order to achieve a representative split like VG150, we use the protocol provided by [SHA-GCL](https://github.com/dongxingning/SHA-GCL-for-SGG). You can download the annotation file from [this link](https://1drv.ms/u/s!AjK8-t5JiDT1kwwKFbdBB3ZU3c49?e=06qeZc), and put all three files to  `datasets/gqa/`.
+3. Note the link to the original GQA200 dataset was not working, so we re-uploaded the dataset to [google drive](https://drive.google.com/drive/folders/1nO0woYfBu_tKh0TEkIt_-QIhfOmqkI_d?usp=sharing).
 
 ### For Open Image V6 Dataset:
 1. We use the dataset processed by [PySGG](https://github.com/SHTUPLUS/PySGG). You can download the processed dataset [Openimage V6(38GB)](https://shanghaitecheducn-my.sharepoint.com/:u:/g/personal/lirj2_shanghaitech_edu_cn/EXdZWvR_vrpNmQVvubG7vhABbdmeKKzX6PJFlIdrCS80vw?e=uQREX3). 
