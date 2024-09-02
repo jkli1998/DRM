@@ -4,8 +4,8 @@ If you want to use other directory, please link it in `DATASETS` of `maskrcnn_be
 
 ### For VG Dataset:
 1. Download the VG images [part1 (9 Gb)](https://cs.stanford.edu/people/rak248/VG_100K_2/images.zip) [part2 (5 Gb)](https://cs.stanford.edu/people/rak248/VG_100K_2/images2.zip). Extract these images to the file `datasets/vg/VG_100K`.
-2. Download the [scene graphs](https://1drv.ms/u/s!AjK8-t5JiDT1kxyaarJPzL7KByZs?e=bBffxj) and extract them to `datasets/vg/VG-SGG-with-attri.h5`.
-3. The former list of zero-shot triplets have overlap with train triplet types. We carefully remove them and provide the updated list of zero-shot triplets. You can download it from this [link](TODO), and check the details via our repo [T-CAR](https://github.com/jkli1998/T-CAR).
+2. Download the [scene graphs](https://1drv.ms/u/s!AjK8-t5JiDT1kxyaarJPzL7KByZs?e=bBffxj) and extract them to `datasets/vg/VG-SGG-with-attri.h5`. (Note the original link originated from the SHA-GCL, which is now unavailable. The updated link is [here](https://drive.google.com/drive/folders/1XTe39pfs6IQijrWNC6-ojEI0ypmJiJ1I?usp=sharing).)
+4. The former list of zero-shot triplets have overlap with train triplet types. We carefully remove them and provide the updated list of zero-shot triplets. You can download it from this [link](TODO), and check the details via our repo [T-CAR](https://github.com/jkli1998/T-CAR).
 
 ### For GQA Dataset:
 1. Download the GQA images [Full (20.3 Gb)](https://downloads.cs.stanford.edu/nlp/data/gqa/images.zip). Extract these images to the file `datasets/gqa/images`. 
