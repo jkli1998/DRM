@@ -74,7 +74,8 @@ class GQADataset(torch.utils.data.Dataset):
         if cfg.MODEL.STAGE == "stage2" and self.split == 'train':
             # creat repeat dict in main process, other process just wait and load
             if get_rank() == 0:
-                if cfg.MODEL.ROI_RELATION_HEAD.USE_GT_BOX and cfg.GLOBAL_SETTING.DATASET_CHOICE != "GQA_200":
+                #  and cfg.GLOBAL_SETTING.DATASET_CHOICE != "GQA_200"
+                if cfg.MODEL.ROI_RELATION_HEAD.USE_GT_BOX:
                     repeat_result = median_resampling_dict_generation(self, self.cfg, self.ind_to_predicates, logger)
                 else:
                     repeat_result = median_resampling_dict_generation_sgdet(self, self.cfg, self.ind_to_predicates, logger)
