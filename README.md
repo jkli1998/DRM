@@ -23,10 +23,9 @@ Check [DATASET.md](DATASET.md) for instructions of dataset preprocessing (VG & G
 
 ## Pretrained Detection Models
 
-1. For VG dataset, the pretrained object detector we used is provided by [Scene-Graph-Benchmark](https://github.com/KaihuaTang/Scene-Graph-Benchmark.pytorch), you can download it from [this link](https://1drv.ms/u/s!AjK8-t5JiDT1kxT9s3JwIpoGz4cA?e=usU6TR). 
+1. For VG dataset, the pretrained object detector we used is provided by [Scene-Graph-Benchmark](https://github.com/KaihuaTang/Scene-Graph-Benchmark.pytorch), you can download it from [this link](https://1drv.ms/u/s!AmRLLNf6bzcir8xemVHbqPBrvjjtQg?e=hAhYCw). 
 2. For GQA dataset, the pretrained object detector we used is provided by [SHA-GCL-for-SGG](https://github.com/dongxingning/SHA-GCL-for-SGG), you can get it from [this link](https://drive.google.com/file/d/1vimG6TZPs0pJwL2MpLM2f2pLGUuiaDNn). 
 3. For Open Image dataset, the pretrained object detector we used is provided by [PySGG](https://github.com/SHTUPLUS/PySGG), you can get it from [this link](https://shanghaitecheducn-my.sharepoint.com/:u:/g/personal/lirj2_shanghaitech_edu_cn/EfGXxc9byEtEnYFwd0xdlYEBcUuFXBjYxNUXVGkgc-jkfQ?e=lSlqnz).
-   
 
 
 ## Train on Scene Graph Generation
